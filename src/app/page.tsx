@@ -9,5 +9,8 @@ export default async function Home() {
   const credentials = await getSession()
   const status = await checkRegistryStatus(credentials)
 
-  return <RegistryPage initialStatus={status} registryUrl={env.REGISTRY_URL} />
+  const displayUrl =
+    env.DISPLAY_REGISTRY_URL ?? env.REGISTRY_URL.replace(/^https?:\/\//, "")
+
+  return <RegistryPage initialStatus={status} registryUrl={displayUrl} />
 }
