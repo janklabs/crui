@@ -30,6 +30,9 @@ export function Header({
         </span>
       </div>
       <div className="flex items-center gap-2">
+        <span className="text-muted-foreground text-xs">
+          v{process.env.NEXT_PUBLIC_APP_VERSION}
+        </span>
         <Button variant="ghost" size="icon" className="group" asChild>
           <a
             href="https://github.com/guneet-xyz/crui"
