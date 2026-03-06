@@ -1,4 +1,11 @@
-import { PiGithubLogo, PiGithubLogoDuotone } from "react-icons/pi"
+import {
+  PiGithubLogo,
+  PiGithubLogoDuotone,
+  PiMoon,
+  PiMoonDuotone,
+  PiSun,
+  PiSunDuotone,
+} from "react-icons/pi"
 
 import { cn } from "~/lib/utils"
 
@@ -27,4 +34,11 @@ export function GitHubIcon() {
   return (
     <DynamicIcon noHover={<PiGithubLogo />} hover={<PiGithubLogoDuotone />} />
   )
+}
+
+export function ThemeIcon({ theme }: { theme: string | undefined }) {
+  if (theme === "dark") {
+    return <DynamicIcon noHover={<PiMoon />} hover={<PiMoonDuotone />} />
+  }
+  return <DynamicIcon noHover={<PiSun />} hover={<PiSunDuotone />} />
 }
