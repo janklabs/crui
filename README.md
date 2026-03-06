@@ -1,29 +1,32 @@
-# Create T3 App
+# CRUI
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+A simple, read-only web UI for browsing Docker container registries.
 
-## What's next? How do I make an app with this?
+## Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- Browse repositories and tags
+- View image manifests and layer details
+- Dark mode
+- Optional authentication (prompts users to log in if the registry requires it)
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Quick Start (Docker)
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+```bash
+docker run -d \
+  -p 3000:3000 \
+  -e REGISTRY_URL=https://registry.example.com \
+  -e SESSION_SECRET=$(openssl rand -base64 32) \
+  guneet/crui:latest
+```
 
-## Learn More
+Then open [http://localhost:3000](http://localhost:3000).
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+## Environment Variables
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
-
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
-
-## How do I deploy this?
-
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+| Variable               | Required | Description                                                                                                                          |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `REGISTRY_URL`         | Yes      | URL of the Docker registry. `https://` is assumed if no protocol is provided.                                                        |
+| `SESSION_SECRET`       | Yes      | Secret for session encryption (min 32 characters). Generate with `openssl rand -base64 32`.                                          |
+| `REGISTRY_USERNAME`    | No       | Default username for registry auth. If not set, users are prompted to log in.                                                        |
+| `REGISTRY_PASSWORD`    | No       | Default password for registry auth.                                                                                                  |
+| `DISPLAY_REGISTRY_URL` | No       | Override the registry URL shown in the UI. Useful when the server-side URL differs from what users access (e.g., Docker networking). |
