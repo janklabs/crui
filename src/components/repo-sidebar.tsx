@@ -281,7 +281,9 @@ function NamespaceItem({
           ) : (
             <FolderClosed className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
           )}
-          <span className="truncate font-medium">{group.namespace}</span>
+          <span className="truncate font-medium">
+            {group.namespace === "_" ? "(no namespace)" : group.namespace}
+          </span>
           <span className="text-muted-foreground ml-auto text-xs">
             {group.images.length}
           </span>
