@@ -40,17 +40,13 @@ export async function checkRegistryStatus(
   }
 
   try {
-    // First try without auth to see if registry is accessible
     const res = await fetch(`${REGISTRY_URL}/v2/`, {
       method: "GET",
-      headers: {
-        ...buildAuthHeader(null),
-      },
+      headers: {},
       cache: "no-store",
     })
 
     if (res.ok) {
-      // No auth required
       return {
         ...base,
         connected: true,
@@ -60,7 +56,6 @@ export async function checkRegistryStatus(
     }
 
     if (res.status === 401) {
-      // Auth is required
       if (!credentials) {
         return {
           ...base,
@@ -70,7 +65,6 @@ export async function checkRegistryStatus(
         }
       }
 
-      // Try with credentials
       const authRes = await fetch(`${REGISTRY_URL}/v2/`, {
         method: "GET",
         headers: {
@@ -141,7 +135,6 @@ export async function listRepositories(
   const data = (await res.json()) as { repositories: string[] | null }
   const repositories = data.repositories ?? []
 
-  // Check for Link header (pagination)
   const linkHeader = res.headers.get("Link")
   const hasMore = !!linkHeader && linkHeader.includes('rel="next"')
 
@@ -250,7 +243,6 @@ export async function getManifest(
 
   const data = (await res.json()) as Record<string, unknown>
 
-  // Check if it's a manifest list (multi-arch)
   if (
     contentType.includes("manifest.list") ||
     contentType.includes("image.index") ||
@@ -280,7 +272,6 @@ export async function getManifest(
     }
   }
 
-  // Single manifest
   const layers = (
     (data.layers as Array<{
       mediaType: string
@@ -314,7 +305,6 @@ export async function getManifest(
       : undefined,
   }
 
-  // Try to fetch the config blob to get platform + created info
   if (config?.digest) {
     try {
       const configData = await fetchConfigBlob(name, config.digest, credentials)
@@ -327,7 +317,7 @@ export async function getManifest(
         manifest.created = configData.created
       }
     } catch {
-      // Config blob fetch is optional, don't fail
+      /* config blob fetch is optional */
     }
   }
 

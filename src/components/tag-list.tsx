@@ -1,15 +1,17 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
 import { useRouter } from "next/navigation"
 
 import { Search, Tag } from "lucide-react"
 
 import { fetchTagsAction } from "~/app/actions"
+import { RetryButton } from "~/components/retry-button"
 import { Badge } from "~/components/ui/badge"
 import { Input } from "~/components/ui/input"
 import { Skeleton } from "~/components/ui/skeleton"
+import { useAsyncData } from "~/hooks/use-async-data"
 import { imageUrl } from "~/lib/urls"
 import { cn } from "~/lib/utils"
 
@@ -20,27 +22,22 @@ interface TagListProps {
 
 export function TagList({ repoName, selectedTag }: TagListProps) {
   const router = useRouter()
-  const [tags, setTags] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
 
-  const loadTags = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
+  const {
+    data: tags,
+    loading,
+    error,
+    reload,
+  } = useAsyncData(
+    async () => {
       const result = await fetchTagsAction(repoName)
-      setTags(result.tags)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load tags")
-    } finally {
-      setLoading(false)
-    }
-  }, [repoName])
-
-  useEffect(() => {
-    void loadTags()
-  }, [loadTags])
+      return result.tags
+    },
+    [],
+    "Failed to load tags",
+    [repoName],
+  )
 
   const filteredTags = useMemo(() => {
     if (!searchQuery) return tags
@@ -73,12 +70,7 @@ export function TagList({ repoName, selectedTag }: TagListProps) {
           Tags
         </h3>
         <p className="text-destructive text-sm">{error}</p>
-        <button
-          onClick={() => void loadTags()}
-          className="text-primary text-sm underline underline-offset-2 hover:no-underline"
-        >
-          Retry
-        </button>
+        <RetryButton onClick={reload} />
       </div>
     )
   }
@@ -127,9 +119,11 @@ export function TagList({ repoName, selectedTag }: TagListProps) {
               onClick={() => router.push(imageUrl(repoName, tag))}
               className={cn(
                 "hover:bg-accent inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
-                selectedTag === tag
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border text-foreground",
+                {
+                  "border-primary bg-primary/10 text-primary":
+                    selectedTag === tag,
+                  "border-border text-foreground": selectedTag !== tag,
+                },
               )}
             >
               {tag}

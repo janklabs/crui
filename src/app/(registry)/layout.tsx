@@ -20,7 +20,6 @@ export default async function RegistryLayout({
   const displayUrl =
     env.DISPLAY_REGISTRY_URL ?? env.REGISTRY_URL.replace(/^https?:\/\//, "")
 
-  // Registry not connected
   if (!status.connected) {
     return (
       <div className="flex h-screen flex-col">
@@ -42,7 +41,6 @@ export default async function RegistryLayout({
     )
   }
 
-  // Requires auth and not authenticated
   if (status.requiresAuth && !status.authenticated) {
     return (
       <div className="flex h-screen flex-col">
@@ -52,7 +50,6 @@ export default async function RegistryLayout({
     )
   }
 
-  // Authenticated or no auth required
   return (
     <div className="flex h-screen flex-col">
       <Header registryUrl={displayUrl} isAuthenticated={status.requiresAuth} />

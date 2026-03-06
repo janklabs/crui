@@ -1,16 +1,19 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
+import { useEffect } from "react"
 
 import Link from "next/link"
 
 import { Box, ChevronRight, FolderOpen, Search } from "lucide-react"
 
-import { fetchRepositoriesAction } from "~/app/actions"
+import { fetchAllRepositoriesAction } from "~/app/actions"
 import { GridIcon, ListIcon } from "~/components/icons"
+import { RetryButton } from "~/components/retry-button"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { Skeleton } from "~/components/ui/skeleton"
+import { useAsyncData } from "~/hooks/use-async-data"
 import { imageUrl } from "~/lib/urls"
 import { cn } from "~/lib/utils"
 
@@ -22,9 +25,6 @@ interface NamespaceViewProps {
 
 export function NamespaceView({ namespace }: NamespaceViewProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [images, setImages] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
@@ -38,39 +38,24 @@ export function NamespaceView({ namespace }: NamespaceViewProps) {
     localStorage.setItem(VIEW_MODE_KEY, nextView)
   }
 
-  const loadImages = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const allRepos: string[] = []
-      let last: string | undefined
-
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      while (true) {
-        const result = await fetchRepositoriesAction(last)
-        allRepos.push(...result.repositories)
-        if (!result.hasMore) break
-        last = result.last
-      }
-
-      // Filter to repos in this namespace
+  const {
+    data: images,
+    loading,
+    error,
+    reload,
+  } = useAsyncData(
+    async () => {
+      const allRepos = await fetchAllRepositoriesAction()
       const prefix = `${namespace}/`
-      const filtered = allRepos
+      return allRepos
         .filter((repo) => repo.startsWith(prefix))
         .map((repo) => repo.substring(prefix.length))
         .sort((a, b) => a.localeCompare(b))
-
-      setImages(filtered)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load images")
-    } finally {
-      setLoading(false)
-    }
-  }, [namespace])
-
-  useEffect(() => {
-    void loadImages()
-  }, [loadImages])
+    },
+    [],
+    "Failed to load images",
+    [namespace],
+  )
 
   const filteredImages = useMemo(() => {
     if (!searchQuery) return images
@@ -99,12 +84,7 @@ export function NamespaceView({ namespace }: NamespaceViewProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
         <p className="text-destructive text-sm">{error}</p>
-        <button
-          onClick={() => void loadImages()}
-          className="text-primary text-sm underline underline-offset-2 hover:no-underline"
-        >
-          Retry
-        </button>
+        <RetryButton onClick={reload} />
       </div>
     )
   }

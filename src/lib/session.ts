@@ -8,10 +8,12 @@ import { env } from "~/env"
 
 const COOKIE_NAME = "crui_session"
 const ALGORITHM = "aes-256-gcm"
+const SESSION_SALT = "crui-salt"
+const SESSION_MAX_AGE = 60 * 60 * 24
 
 function getKey(): Buffer {
   const secret = env.SESSION_SECRET
-  return crypto.scryptSync(secret, "crui-salt", 32)
+  return crypto.scryptSync(secret, SESSION_SALT, 32)
 }
 
 function encrypt(text: string): string {
@@ -67,12 +69,11 @@ export async function setSession(
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24, // 24 hours
+    maxAge: SESSION_MAX_AGE,
   })
 }
 
 export async function getSession(): Promise<Credentials | null> {
-  // First check if we have environment credentials
   if (env.REGISTRY_USERNAME && env.REGISTRY_PASSWORD) {
     return {
       username: env.REGISTRY_USERNAME,

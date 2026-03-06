@@ -13,7 +13,8 @@ import {
   Tag,
 } from "lucide-react"
 
-import { fetchRepositoriesAction, fetchTagsAction } from "~/app/actions"
+import { fetchAllRepositoriesAction, fetchTagsAction } from "~/app/actions"
+import { RetryButton } from "~/components/retry-button"
 import {
   Collapsible,
   CollapsibleContent,
@@ -22,8 +23,9 @@ import {
 import { Input } from "~/components/ui/input"
 import { ScrollArea } from "~/components/ui/scroll-area"
 import { Skeleton } from "~/components/ui/skeleton"
+import { useAsyncData } from "~/hooks/use-async-data"
 import { imageUrl, parsePathname } from "~/lib/urls"
-import { cn } from "~/lib/utils"
+import { cn, getErrorMessage } from "~/lib/utils"
 
 interface RepoSidebarProps {
   onNavigate?: () => void
@@ -58,7 +60,6 @@ function buildTree(repositories: string[]): NamespaceGroup[] {
 
   return Array.from(map.entries())
     .sort(([a], [b]) => {
-      // Put "_" first
       if (a === "_") return -1
       if (b === "_") return 1
       return a.localeCompare(b)
@@ -94,7 +95,7 @@ function ImageTags({
       setTags(result.tags)
       setLoaded(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load tags")
+      setError(getErrorMessage(err, "Failed to load tags"))
     } finally {
       setLoading(false)
     }
@@ -125,14 +126,7 @@ function ImageTags({
     return (
       <div className="py-1 pr-2 pl-4">
         <p className="text-destructive text-xs">{error}</p>
-        <button
-          onClick={() => {
-            setLoaded(false)
-          }}
-          className="text-primary text-xs underline underline-offset-2 hover:no-underline"
-        >
-          Retry
-        </button>
+        <RetryButton onClick={() => setLoaded(false)} className="text-xs" />
       </div>
     )
   }
@@ -153,9 +147,10 @@ function ImageTags({
           onClick={() => handleTagClick(tag)}
           className={cn(
             "hover:bg-accent flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs transition-colors",
-            selectedRepo === fullName &&
-              selectedTag === tag &&
-              "bg-primary/10 text-primary font-medium",
+            {
+              "bg-primary/10 text-primary font-medium":
+                selectedRepo === fullName && selectedTag === tag,
+            },
           )}
         >
           <Tag className="text-muted-foreground h-3 w-3 shrink-0" />
@@ -201,7 +196,7 @@ function ImageItem({
       <div
         className={cn(
           "hover:bg-accent flex w-full items-center rounded-md transition-colors",
-          isSelected && "bg-accent text-accent-foreground",
+          { "bg-accent text-accent-foreground": isSelected },
         )}
       >
         <CollapsibleTrigger asChild>
@@ -214,7 +209,7 @@ function ImageItem({
             <ChevronRight
               className={cn(
                 "text-muted-foreground h-3 w-3 transition-transform duration-200",
-                isExpanded && "rotate-90",
+                { "rotate-90": isExpanded },
               )}
             />
           </button>
@@ -223,7 +218,7 @@ function ImageItem({
           onClick={handleImageClick}
           className={cn(
             "flex min-w-0 flex-1 items-center gap-1.5 py-1.5 pr-2 text-left text-xs",
-            isSelected && "font-medium",
+            { "font-medium": isSelected },
           )}
         >
           <Box className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
@@ -285,7 +280,7 @@ function NamespaceItem({
             <ChevronRight
               className={cn(
                 "text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform duration-200",
-                isExpanded && "rotate-90",
+                { "rotate-90": isExpanded },
               )}
             />
           </button>
@@ -330,45 +325,23 @@ export function RepoSidebar({ onNavigate }: RepoSidebarProps) {
   const pathname = usePathname()
   const { repo: selectedRepo, tag: selectedTag } = parsePathname(pathname)
 
-  const [repositories, setRepositories] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [error, setError] = useState<string | null>(null)
   const [expandedNamespaces, setExpandedNamespaces] = useState<Set<string>>(
     new Set(),
   )
   const [expandedImages, setExpandedImages] = useState<Set<string>>(new Set())
 
-  const loadRepositories = useCallback(async () => {
-    try {
-      setLoading(true)
-      const allRepos: string[] = []
-      let last: string | undefined
+  const {
+    data: repositories,
+    loading,
+    error,
+    reload,
+  } = useAsyncData(
+    () => fetchAllRepositoriesAction(),
+    [] as string[],
+    "Failed to load repositories",
+  )
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      while (true) {
-        const result = await fetchRepositoriesAction(last)
-        allRepos.push(...result.repositories)
-        if (!result.hasMore) break
-        last = result.last
-      }
-
-      setRepositories(allRepos)
-      setError(null)
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load repositories",
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void loadRepositories()
-  }, [loadRepositories])
-
-  // Auto-expand the namespace and image for the currently selected repo
   useEffect(() => {
     if (selectedRepo) {
       const slashIndex = selectedRepo.indexOf("/")
@@ -428,8 +401,6 @@ export function RepoSidebar({ onNavigate }: RepoSidebarProps) {
       .filter((group) => group.images.length > 0)
   }, [tree, searchQuery])
 
-  // Auto-expand namespaces that have search matches
-  const displayTree = filteredTree
   const autoExpandedNamespaces = useMemo(() => {
     if (!searchQuery) return expandedNamespaces
     const all = new Set(expandedNamespaces)
@@ -440,7 +411,7 @@ export function RepoSidebar({ onNavigate }: RepoSidebarProps) {
   }, [searchQuery, filteredTree, expandedNamespaces])
 
   const totalImages = repositories.length
-  const totalNamespaces = tree.length
+  const totalGroups = tree.length
 
   if (loading) {
     return (
@@ -457,12 +428,7 @@ export function RepoSidebar({ onNavigate }: RepoSidebarProps) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
         <p className="text-destructive text-sm">{error}</p>
-        <button
-          onClick={() => void loadRepositories()}
-          className="text-primary text-sm underline underline-offset-2 hover:no-underline"
-        >
-          Retry
-        </button>
+        <RetryButton onClick={reload} />
       </div>
     )
   }
@@ -482,7 +448,7 @@ export function RepoSidebar({ onNavigate }: RepoSidebarProps) {
       </div>
       <ScrollArea className="flex-1">
         <div className="px-2 pb-2">
-          {displayTree.length === 0 ? (
+          {filteredTree.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
               <Box className="text-muted-foreground h-8 w-8" />
               <p className="text-muted-foreground text-sm">
@@ -490,28 +456,26 @@ export function RepoSidebar({ onNavigate }: RepoSidebarProps) {
               </p>
             </div>
           ) : (
-            <>
-              {displayTree.map((group) => (
-                <NamespaceItem
-                  key={group.namespace}
-                  group={group}
-                  selectedRepo={selectedRepo}
-                  selectedTag={selectedTag}
-                  expandedNamespaces={autoExpandedNamespaces}
-                  expandedImages={expandedImages}
-                  onToggleNamespace={toggleNamespace}
-                  onToggleImage={toggleImage}
-                  onNavigate={onNavigate}
-                />
-              ))}
-            </>
+            filteredTree.map((group) => (
+              <NamespaceItem
+                key={group.namespace}
+                group={group}
+                selectedRepo={selectedRepo}
+                selectedTag={selectedTag}
+                expandedNamespaces={autoExpandedNamespaces}
+                expandedImages={expandedImages}
+                onToggleNamespace={toggleNamespace}
+                onToggleImage={toggleImage}
+                onNavigate={onNavigate}
+              />
+            ))
           )}
         </div>
       </ScrollArea>
       <div className="border-border border-t px-3 py-2">
         <p className="text-muted-foreground text-xs">
-          {totalImages} image{totalImages === 1 ? "" : "s"} across{" "}
-          {totalNamespaces} repositor{totalNamespaces === 1 ? "y" : "ies"}
+          {totalImages} image{totalImages === 1 ? "" : "s"} across {totalGroups}{" "}
+          group{totalGroups === 1 ? "" : "s"}
         </p>
       </div>
     </div>

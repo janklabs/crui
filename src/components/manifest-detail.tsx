@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import {
   Check,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { fetchManifestAction } from "~/app/actions"
+import { RetryButton } from "~/components/retry-button"
 import { Badge } from "~/components/ui/badge"
 import {
   Card,
@@ -22,21 +23,35 @@ import {
 } from "~/components/ui/card"
 import { Separator } from "~/components/ui/separator"
 import { Skeleton } from "~/components/ui/skeleton"
+import { useAsyncData } from "~/hooks/use-async-data"
 import type { ManifestResult } from "~/lib/registry"
-import { formatBytes, getRelativeTime, shortenDigest } from "~/lib/utils"
+import { cn, formatBytes, getRelativeTime, shortenDigest } from "~/lib/utils"
 
 interface ManifestDetailProps {
   repoName: string
   tag: string
 }
 
+const COPY_FEEDBACK_MS = 2000
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      timeoutRef.current = setTimeout(() => setCopied(false), COPY_FEEDBACK_MS)
+    } catch {
+      /* clipboard access denied */
+    }
   }
 
   return (
@@ -55,9 +70,6 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export function ManifestDetail({ repoName, tag }: ManifestDetailProps) {
-  const [result, setResult] = useState<ManifestResult | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [selectedPlatformDigest, setSelectedPlatformDigest] = useState<
     string | null
   >(null)
@@ -65,24 +77,21 @@ export function ManifestDetail({ repoName, tag }: ManifestDetailProps) {
     useState<ManifestResult | null>(null)
   const [platformLoading, setPlatformLoading] = useState(false)
 
-  const loadManifest = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    setSelectedPlatformDigest(null)
-    setPlatformManifest(null)
-    try {
-      const data = await fetchManifestAction(repoName, tag)
-      setResult(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load manifest")
-    } finally {
-      setLoading(false)
-    }
-  }, [repoName, tag])
-
-  useEffect(() => {
-    void loadManifest()
-  }, [loadManifest])
+  const {
+    data: result,
+    loading,
+    error,
+    reload,
+  } = useAsyncData(
+    async () => {
+      setSelectedPlatformDigest(null)
+      setPlatformManifest(null)
+      return fetchManifestAction(repoName, tag)
+    },
+    null as ManifestResult | null,
+    "Failed to load manifest",
+    [repoName, tag],
+  )
 
   const loadPlatformManifest = useCallback(
     async (digest: string) => {
@@ -114,12 +123,7 @@ export function ManifestDetail({ repoName, tag }: ManifestDetailProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
         <p className="text-destructive text-sm">{error}</p>
-        <button
-          onClick={() => void loadManifest()}
-          className="text-primary text-sm underline underline-offset-2 hover:no-underline"
-        >
-          Retry
-        </button>
+        <RetryButton onClick={reload} />
       </div>
     )
   }
@@ -158,11 +162,14 @@ export function ManifestDetail({ repoName, tag }: ManifestDetailProps) {
                 <button
                   key={entry.digest}
                   onClick={() => void loadPlatformManifest(entry.digest)}
-                  className={`hover:bg-accent flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition-colors ${
-                    selectedPlatformDigest === entry.digest
-                      ? "border-primary bg-primary/5"
-                      : "border-border"
-                  }`}
+                  className={cn(
+                    "hover:bg-accent flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition-colors",
+                    {
+                      "border-primary bg-primary/5":
+                        selectedPlatformDigest === entry.digest,
+                      "border-border": selectedPlatformDigest !== entry.digest,
+                    },
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <Cpu className="text-muted-foreground h-4 w-4" />
@@ -276,17 +283,15 @@ function SingleManifestCard({
               <dd>{manifest.schemaVersion}</dd>
             </div>
             {manifest.platform && (
-              <>
-                <div>
-                  <dt className="text-muted-foreground">Platform</dt>
-                  <dd>
-                    {manifest.platform.os}/{manifest.platform.architecture}
-                    {manifest.platform.variant
-                      ? `/${manifest.platform.variant}`
-                      : ""}
-                  </dd>
-                </div>
-              </>
+              <div>
+                <dt className="text-muted-foreground">Platform</dt>
+                <dd>
+                  {manifest.platform.os}/{manifest.platform.architecture}
+                  {manifest.platform.variant
+                    ? `/${manifest.platform.variant}`
+                    : ""}
+                </dd>
+              </div>
             )}
             {manifest.created && (
               <div>
@@ -300,7 +305,7 @@ function SingleManifestCard({
               <dt className="text-muted-foreground">Pull Command</dt>
               <dd className="flex items-center gap-1">
                 <code className="bg-muted rounded px-2 py-1 font-mono text-xs">
-                  docker pull {repoName}:{shortenDigest(digest)}
+                  docker pull {repoName}@{shortenDigest(digest)}
                 </code>
                 <CopyButton text={`docker pull ${repoName}@${digest}`} />
               </dd>
