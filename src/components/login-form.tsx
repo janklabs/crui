@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 
+import { useRouter } from "next/navigation"
+
 import { AlertCircle, Loader2, Lock } from "lucide-react"
 
 import { loginAction } from "~/app/actions"
@@ -18,10 +20,10 @@ import { Label } from "~/components/ui/label"
 
 interface LoginFormProps {
   registryUrl: string
-  onSuccess: () => void
 }
 
-export function LoginForm({ registryUrl, onSuccess }: LoginFormProps) {
+export function LoginForm({ registryUrl }: LoginFormProps) {
+  const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -35,7 +37,7 @@ export function LoginForm({ registryUrl, onSuccess }: LoginFormProps) {
     try {
       const result = await loginAction(username, password)
       if (result.success) {
-        onSuccess()
+        router.refresh()
       } else {
         setError(result.error ?? "Login failed")
       }

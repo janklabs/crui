@@ -1,6 +1,10 @@
 import {
   PiGithubLogo,
   PiGithubLogoDuotone,
+  PiGridFour,
+  PiGridFourDuotone,
+  PiList,
+  PiListDuotone,
   PiMoon,
   PiMoonDuotone,
   PiSun,
@@ -41,4 +45,12 @@ export function ThemeIcon({ theme }: { theme: string | undefined }) {
     return <DynamicIcon noHover={<PiMoon />} hover={<PiMoonDuotone />} />
   }
   return <DynamicIcon noHover={<PiSun />} hover={<PiSunDuotone />} />
+}
+
+export function GridIcon() {
+  return <DynamicIcon noHover={<PiGridFour />} hover={<PiGridFourDuotone />} />
+}
+
+export function ListIcon() {
+  return <DynamicIcon noHover={<PiList />} hover={<PiListDuotone />} />
 }

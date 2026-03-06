@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 
+import { usePathname, useRouter } from "next/navigation"
+
 import {
   Box,
   ChevronRight,
@@ -20,13 +22,11 @@ import {
 import { Input } from "~/components/ui/input"
 import { ScrollArea } from "~/components/ui/scroll-area"
 import { Skeleton } from "~/components/ui/skeleton"
+import { imageUrl, parsePathname } from "~/lib/urls"
 import { cn } from "~/lib/utils"
 
 interface RepoSidebarProps {
-  selectedRepo: string | null
-  selectedTag: string | null
-  onSelectRepo: (repo: string) => void
-  onSelectTag: (repo: string, tag: string) => void
+  onNavigate?: () => void
 }
 
 interface NamespaceGroup {
@@ -73,13 +73,14 @@ function ImageTags({
   fullName,
   selectedRepo,
   selectedTag,
-  onSelectTag,
+  onNavigate,
 }: {
   fullName: string
   selectedRepo: string | null
   selectedTag: string | null
-  onSelectTag: (repo: string, tag: string) => void
+  onNavigate?: () => void
 }) {
+  const router = useRouter()
   const [tags, setTags] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -104,6 +105,11 @@ function ImageTags({
       void loadTags()
     }
   }, [loaded, loadTags])
+
+  const handleTagClick = (tag: string) => {
+    router.push(imageUrl(fullName, tag))
+    onNavigate?.()
+  }
 
   if (loading) {
     return (
@@ -144,7 +150,7 @@ function ImageTags({
       {tags.map((tag) => (
         <button
           key={tag}
-          onClick={() => onSelectTag(fullName, tag)}
+          onClick={() => handleTagClick(tag)}
           className={cn(
             "hover:bg-accent flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs transition-colors",
             selectedRepo === fullName &&
@@ -166,22 +172,22 @@ function ImageItem({
   selectedTag,
   expandedImages,
   onToggleImage,
-  onSelectRepo,
-  onSelectTag,
+  onNavigate,
 }: {
   image: { name: string; fullName: string }
   selectedRepo: string | null
   selectedTag: string | null
   expandedImages: Set<string>
   onToggleImage: (fullName: string) => void
-  onSelectRepo: (repo: string) => void
-  onSelectTag: (repo: string, tag: string) => void
+  onNavigate?: () => void
 }) {
+  const router = useRouter()
   const isExpanded = expandedImages.has(image.fullName)
   const isSelected = selectedRepo === image.fullName
 
   const handleImageClick = () => {
-    onSelectRepo(image.fullName)
+    router.push(imageUrl(image.fullName))
+    onNavigate?.()
     if (!isExpanded) {
       onToggleImage(image.fullName)
     }
@@ -229,7 +235,7 @@ function ImageItem({
           fullName={image.fullName}
           selectedRepo={selectedRepo}
           selectedTag={selectedTag}
-          onSelectTag={onSelectTag}
+          onNavigate={onNavigate}
         />
       </CollapsibleContent>
     </Collapsible>
@@ -244,8 +250,7 @@ function NamespaceItem({
   expandedImages,
   onToggleNamespace,
   onToggleImage,
-  onSelectRepo,
-  onSelectTag,
+  onNavigate,
 }: {
   group: NamespaceGroup
   selectedRepo: string | null
@@ -254,28 +259,41 @@ function NamespaceItem({
   expandedImages: Set<string>
   onToggleNamespace: (ns: string) => void
   onToggleImage: (fullName: string) => void
-  onSelectRepo: (repo: string) => void
-  onSelectTag: (repo: string, tag: string) => void
+  onNavigate?: () => void
 }) {
+  const router = useRouter()
   const isExpanded = expandedNamespaces.has(group.namespace)
+
+  const handleNamespaceClick = () => {
+    if (group.namespace !== "_") {
+      router.push(`/images/${encodeURI(group.namespace)}`)
+      onNavigate?.()
+    }
+    if (!isExpanded) {
+      onToggleNamespace(group.namespace)
+    }
+  }
 
   return (
     <Collapsible
       open={isExpanded}
       onOpenChange={() => onToggleNamespace(group.namespace)}
     >
-      <CollapsibleTrigger asChild>
+      <div className="hover:bg-accent flex w-full items-center rounded-md transition-colors">
+        <CollapsibleTrigger asChild>
+          <button className="flex shrink-0 items-center justify-center p-2">
+            <ChevronRight
+              className={cn(
+                "text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform duration-200",
+                isExpanded && "rotate-90",
+              )}
+            />
+          </button>
+        </CollapsibleTrigger>
         <button
-          className={cn(
-            "hover:bg-accent flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors",
-          )}
+          onClick={handleNamespaceClick}
+          className="flex min-w-0 flex-1 items-center gap-2 py-2 pr-2 text-left text-sm"
         >
-          <ChevronRight
-            className={cn(
-              "text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform duration-200",
-              isExpanded && "rotate-90",
-            )}
-          />
           {isExpanded ? (
             <FolderOpen className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
           ) : (
@@ -288,7 +306,7 @@ function NamespaceItem({
             {group.images.length}
           </span>
         </button>
-      </CollapsibleTrigger>
+      </div>
       <CollapsibleContent>
         <div className="pl-4">
           {group.images.map((image) => (
@@ -299,8 +317,7 @@ function NamespaceItem({
               selectedTag={selectedTag}
               expandedImages={expandedImages}
               onToggleImage={onToggleImage}
-              onSelectRepo={onSelectRepo}
-              onSelectTag={onSelectTag}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
@@ -309,12 +326,10 @@ function NamespaceItem({
   )
 }
 
-export function RepoSidebar({
-  selectedRepo,
-  selectedTag,
-  onSelectRepo,
-  onSelectTag,
-}: RepoSidebarProps) {
+export function RepoSidebar({ onNavigate }: RepoSidebarProps) {
+  const pathname = usePathname()
+  const { repo: selectedRepo, tag: selectedTag } = parsePathname(pathname)
+
   const [repositories, setRepositories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -352,6 +367,23 @@ export function RepoSidebar({
   useEffect(() => {
     void loadRepositories()
   }, [loadRepositories])
+
+  // Auto-expand the namespace and image for the currently selected repo
+  useEffect(() => {
+    if (selectedRepo) {
+      const slashIndex = selectedRepo.indexOf("/")
+      const namespace =
+        slashIndex === -1 ? "_" : selectedRepo.substring(0, slashIndex)
+      setExpandedNamespaces((prev) => {
+        if (prev.has(namespace)) return prev
+        return new Set(prev).add(namespace)
+      })
+      setExpandedImages((prev) => {
+        if (prev.has(selectedRepo)) return prev
+        return new Set(prev).add(selectedRepo)
+      })
+    }
+  }, [selectedRepo])
 
   const toggleNamespace = (ns: string) => {
     setExpandedNamespaces((prev) => {
@@ -469,8 +501,7 @@ export function RepoSidebar({
                   expandedImages={expandedImages}
                   onToggleNamespace={toggleNamespace}
                   onToggleImage={toggleImage}
-                  onSelectRepo={onSelectRepo}
-                  onSelectTag={onSelectTag}
+                  onNavigate={onNavigate}
                 />
               ))}
             </>

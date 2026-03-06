@@ -1,7 +1,10 @@
 "use client"
 
+import { useRouter } from "next/navigation"
+
 import { Box, LogOut } from "lucide-react"
 
+import { logoutAction } from "~/app/actions"
 import { Button } from "~/components/ui/button"
 import { Separator } from "~/components/ui/separator"
 import {
@@ -17,14 +20,16 @@ import { ThemeToggle } from "./theme-toggle"
 interface HeaderProps {
   registryUrl: string
   isAuthenticated: boolean
-  onLogout?: () => void
 }
 
-export function Header({
-  registryUrl,
-  isAuthenticated,
-  onLogout,
-}: HeaderProps) {
+export function Header({ registryUrl, isAuthenticated }: HeaderProps) {
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await logoutAction()
+    router.refresh()
+  }
+
   return (
     <header className="border-border flex h-14 shrink-0 items-center justify-between border-b px-4">
       <div className="flex items-center gap-3">
@@ -56,10 +61,14 @@ export function Header({
             <TooltipContent>GitHub</TooltipContent>
           </Tooltip>
           <ThemeToggle />
-          {isAuthenticated && onLogout && (
+          {isAuthenticated && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={onLogout}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => void handleLogout()}
+                >
                   <LogOut className="h-4 w-4" />
                   <span className="sr-only">Logout</span>
                 </Button>
