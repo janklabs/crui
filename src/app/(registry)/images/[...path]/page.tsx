@@ -1,9 +1,9 @@
-import { ManifestDetail } from "~/components/manifest-detail"
-import { NamespaceView } from "~/components/namespace-view"
-import { TagList } from "~/components/tag-list"
-import { ScrollArea } from "~/components/ui/scroll-area"
-import { Separator } from "~/components/ui/separator"
-import { parsePath } from "~/lib/urls"
+import { ManifestDetail } from "@/components/manifest-detail"
+import { NamespaceView } from "@/components/namespace-view"
+import { TagList } from "@/components/tag-list"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { parsePath } from "@/lib/urls"
 
 export default async function ImagePage({
   params,

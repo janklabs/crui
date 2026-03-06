@@ -1,12 +1,12 @@
 import { Box, WifiOff } from "lucide-react"
 
-import { Header } from "~/components/header"
-import { LoginForm } from "~/components/login-form"
-import { MobileSidebar } from "~/components/mobile-sidebar"
-import { RepoSidebar } from "~/components/repo-sidebar"
-import { env } from "~/env"
-import { checkRegistryStatus } from "~/lib/registry"
-import { getSession } from "~/lib/session"
+import { Header } from "@/components/header"
+import { LoginForm } from "@/components/login-form"
+import { MobileSidebar } from "@/components/mobile-sidebar"
+import { RepoSidebar } from "@/components/repo-sidebar"
+import { env } from "@/env"
+import { checkRegistryStatus } from "@/lib/registry"
+import { getSession } from "@/lib/session"
 
 export const dynamic = "force-dynamic"
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 
-import { getErrorMessage } from "~/lib/utils"
+import { getErrorMessage } from "@/lib/utils"
 
 interface AsyncDataState<T> {
   data: T

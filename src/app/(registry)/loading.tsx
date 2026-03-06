@@ -1,6 +1,6 @@
 import { Box, Loader2 } from "lucide-react"
 
-import { Separator } from "~/components/ui/separator"
+import { Separator } from "@/components/ui/separator"
 
 export default function Loading() {
   return (

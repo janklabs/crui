@@ -1,5 +1,5 @@
-import { env } from "~/env"
-import type { Credentials } from "~/lib/session"
+import { env } from "@/env"
+import type { Credentials } from "@/lib/session"
 
 const REGISTRY_URL = (env.REGISTRY_URL ?? "").replace(/\/$/, "")
 

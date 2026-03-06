@@ -4,16 +4,15 @@ import { useRouter } from "next/navigation"
 
 import { Box, LogOut } from "lucide-react"
 
-import { logoutAction } from "~/app/actions"
-import { Button } from "~/components/ui/button"
-import { Separator } from "~/components/ui/separator"
+import { logoutAction } from "@/app/actions"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "~/components/ui/tooltip"
-
+} from "@/components/ui/tooltip"
 import { GitHubIcon } from "./icons"
 import { ThemeToggle } from "./theme-toggle"
 

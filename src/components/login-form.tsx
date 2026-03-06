@@ -6,17 +6,17 @@ import { useRouter } from "next/navigation"
 
 import { AlertCircle, Loader2, Lock } from "lucide-react"
 
-import { loginAction } from "~/app/actions"
-import { Button } from "~/components/ui/button"
+import { loginAction } from "@/app/actions"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "~/components/ui/card"
-import { Input } from "~/components/ui/input"
-import { Label } from "~/components/ui/label"
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface LoginFormProps {
   registryUrl: string

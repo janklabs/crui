@@ -4,8 +4,8 @@ import { useState } from "react"
 
 import { Menu } from "lucide-react"
 
-import { RepoSidebar } from "~/components/repo-sidebar"
-import { Button } from "~/components/ui/button"
+import { RepoSidebar } from "@/components/repo-sidebar"
+import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetContent,
@@ -13,7 +13,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "~/components/ui/sheet"
+} from "@/components/ui/sheet"
 
 export function MobileSidebar() {
   const [open, setOpen] = useState(false)

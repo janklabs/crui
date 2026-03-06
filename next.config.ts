@@ -5,6 +5,7 @@
 import type { NextConfig } from "next"
 
 import packageJson from "./package.json" with { type: "json" }
+
 import "./src/env.js"
 
 const config: NextConfig = {

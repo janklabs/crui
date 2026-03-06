@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import { Geist } from "next/font/google"
 
-import { ThemeProvider } from "~/components/theme-provider"
-import { cn } from "~/lib/utils"
-import "~/styles/globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { cn } from "@/lib/utils"
+
+import "@/styles/globals.css"
 
 const geist = Geist({
   subsets: ["latin"],

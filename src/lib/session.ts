@@ -1,10 +1,10 @@
 "use server"
 
-import { cookies } from "next/headers"
-
 import crypto from "crypto"
 
-import { env } from "~/env"
+import { cookies } from "next/headers"
+
+import { env } from "@/env"
 
 const COOKIE_NAME = "crui_session"
 const ALGORITHM = "aes-256-gcm"

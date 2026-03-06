@@ -13,19 +13,19 @@ import {
   Tag,
 } from "lucide-react"
 
-import { fetchAllRepositoriesAction, fetchTagsAction } from "~/app/actions"
-import { RetryButton } from "~/components/retry-button"
+import { fetchAllRepositoriesAction, fetchTagsAction } from "@/app/actions"
+import { RetryButton } from "@/components/retry-button"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "~/components/ui/collapsible"
-import { Input } from "~/components/ui/input"
-import { ScrollArea } from "~/components/ui/scroll-area"
-import { Skeleton } from "~/components/ui/skeleton"
-import { useAsyncData } from "~/hooks/use-async-data"
-import { imageUrl, parsePathname } from "~/lib/urls"
-import { cn, getErrorMessage } from "~/lib/utils"
+} from "@/components/ui/collapsible"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAsyncData } from "@/hooks/use-async-data"
+import { imageUrl, parsePathname } from "@/lib/urls"
+import { cn, getErrorMessage } from "@/lib/utils"
 
 interface RepoSidebarProps {
   onNavigate?: () => void

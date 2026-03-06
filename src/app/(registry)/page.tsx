@@ -1,6 +1,6 @@
 import { Box } from "lucide-react"
 
-import { ScrollArea } from "~/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function RegistryHome() {
   return (

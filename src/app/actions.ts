@@ -5,13 +5,11 @@ import {
   getManifest,
   listRepositories,
   listTags,
-} from "~/lib/registry"
-import type {
-  ManifestResult,
-  RegistryStatus,
-  TagsResponse,
-} from "~/lib/registry"
-import { clearSession, getSession, setSession } from "~/lib/session"
+  type ManifestResult,
+  type RegistryStatus,
+  type TagsResponse,
+} from "@/lib/registry"
+import { clearSession, getSession, setSession } from "@/lib/session"
 
 const CATALOG_PAGE_SIZE = 100
 

@@ -1,21 +1,20 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import Link from "next/link"
 
 import { Box, ChevronRight, FolderOpen, Search } from "lucide-react"
 
-import { fetchAllRepositoriesAction } from "~/app/actions"
-import { GridIcon, ListIcon } from "~/components/icons"
-import { RetryButton } from "~/components/retry-button"
-import { Button } from "~/components/ui/button"
-import { Input } from "~/components/ui/input"
-import { Skeleton } from "~/components/ui/skeleton"
-import { useAsyncData } from "~/hooks/use-async-data"
-import { imageUrl } from "~/lib/urls"
-import { cn } from "~/lib/utils"
+import { fetchAllRepositoriesAction } from "@/app/actions"
+import { GridIcon, ListIcon } from "@/components/icons"
+import { RetryButton } from "@/components/retry-button"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAsyncData } from "@/hooks/use-async-data"
+import { imageUrl } from "@/lib/urls"
+import { cn } from "@/lib/utils"
 
 const VIEW_MODE_KEY = "crui:namespace-view-mode"
 

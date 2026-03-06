@@ -4,13 +4,12 @@ import { useEffect, useState } from "react"
 
 import { useTheme } from "next-themes"
 
-import { Button } from "~/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "~/components/ui/tooltip"
-
+} from "@/components/ui/tooltip"
 import { ThemeIcon } from "./icons"
 
 export function ThemeToggle() {

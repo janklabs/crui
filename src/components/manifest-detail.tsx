@@ -11,21 +11,21 @@ import {
   Loader2,
 } from "lucide-react"
 
-import { fetchManifestAction } from "~/app/actions"
-import { RetryButton } from "~/components/retry-button"
-import { Badge } from "~/components/ui/badge"
+import { fetchManifestAction } from "@/app/actions"
+import { RetryButton } from "@/components/retry-button"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "~/components/ui/card"
-import { Separator } from "~/components/ui/separator"
-import { Skeleton } from "~/components/ui/skeleton"
-import { useAsyncData } from "~/hooks/use-async-data"
-import type { ManifestResult } from "~/lib/registry"
-import { cn, formatBytes, getRelativeTime, shortenDigest } from "~/lib/utils"
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAsyncData } from "@/hooks/use-async-data"
+import type { ManifestResult } from "@/lib/registry"
+import { cn, formatBytes, getRelativeTime, shortenDigest } from "@/lib/utils"
 
 interface ManifestDetailProps {
   repoName: string

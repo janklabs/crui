@@ -6,14 +6,14 @@ import { useRouter } from "next/navigation"
 
 import { Search, Tag } from "lucide-react"
 
-import { fetchTagsAction } from "~/app/actions"
-import { RetryButton } from "~/components/retry-button"
-import { Badge } from "~/components/ui/badge"
-import { Input } from "~/components/ui/input"
-import { Skeleton } from "~/components/ui/skeleton"
-import { useAsyncData } from "~/hooks/use-async-data"
-import { imageUrl } from "~/lib/urls"
-import { cn } from "~/lib/utils"
+import { fetchTagsAction } from "@/app/actions"
+import { RetryButton } from "@/components/retry-button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAsyncData } from "@/hooks/use-async-data"
+import { imageUrl } from "@/lib/urls"
+import { cn } from "@/lib/utils"
 
 interface TagListProps {
   repoName: string
