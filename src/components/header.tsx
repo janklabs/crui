@@ -48,7 +48,7 @@ export function Header({ registryUrl, isAuthenticated }: HeaderProps) {
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="group" asChild>
                 <a
-                  href="https://github.com/guneet-xyz/crui"
+                  href="https://github.com/janklabs/crui"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
