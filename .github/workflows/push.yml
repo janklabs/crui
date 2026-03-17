@@ -110,4 +110,4 @@ jobs:
       - name: Set permissions for SSH private key
         run: chmod 400 ~/.ssh/id_rsa
       - name: SSH into server
-        run: ssh -tt -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.GILGAMESH_SSH_USER }}@${{ secrets.GILGAMESH_SSH_HOST }} ${{ vars.GILGAMESH_SSH_COMMAND }}
+        run: ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.GILGAMESH_SSH_USER }}@${{ secrets.GILGAMESH_SSH_HOST }} ${{ vars.SSH_COMMAND }}
