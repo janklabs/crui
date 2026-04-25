@@ -3,14 +3,15 @@ FROM node:22-alpine AS build
 ARG BUILD_VERSION=0.1.0
 
 WORKDIR /src
-COPY package.json package-lock.json ./
-RUN npm ci
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
 ENV SKIP_ENV_VALIDATION=1
 ENV NEXT_PUBLIC_APP_VERSION=$BUILD_VERSION
-RUN npm run build
+RUN pnpm run build
 
 FROM node:22-alpine
 
