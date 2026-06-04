@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { checkRegistryStatus, listRepositories, listTags } from "./registry"
+
 vi.mock("@/env", () => ({
   env: {
     REGISTRY_URL: "https://registry.test.local",
@@ -7,8 +9,6 @@ vi.mock("@/env", () => ({
     NODE_ENV: "test",
   },
 }))
-
-import { checkRegistryStatus, listRepositories, listTags } from "./registry"
 
 function mockFetch(
   status: number,

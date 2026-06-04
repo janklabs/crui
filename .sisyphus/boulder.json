@@ -1,9 +1,7 @@
 {
   "active_plan": "/Users/guneet/projects/crui/.sisyphus/plans/add-tests-and-ci.md",
   "started_at": "2026-06-04T09:27:45.187Z",
-  "session_ids": [
-    "ses_16e240fedffetw5pW5NI6Q7ZqR"
-  ],
+  "session_ids": ["ses_16e240fedffetw5pW5NI6Q7ZqR"],
   "plan_name": "add-tests-and-ci",
   "session_origins": {
     "ses_16e240fedffetw5pW5NI6Q7ZqR": "direct"
@@ -26,6 +24,14 @@
       "agent": "Sisyphus-Junior",
       "category": "writing",
       "updated_at": "2026-06-04T09:43:46.352Z"
+    },
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "**Plan Compliance Audit** — `oracle`",
+      "session_id": "ses_16df86f47ffevCssU09dGOtf8x",
+      "agent": "oracle",
+      "updated_at": "2026-06-04T09:49:03.029Z"
     }
   }
 }

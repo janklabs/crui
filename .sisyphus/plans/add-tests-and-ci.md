@@ -5,6 +5,7 @@
 > **Quick Summary**: Introduce a complete test stack (Vitest + RTL for unit/component/server-action tests, Playwright for E2E) to the crui Next.js 16 / React 19 project, seed sample tests for each layer, and gate the existing release + Docker workflow on `typecheck`, `test`, and `e2e` jobs while opening CI to pull requests.
 >
 > **Deliverables**:
+>
 > - Vitest + RTL + Playwright installed and configured
 > - `vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`
 > - Sample tests: 2 lib unit, 1 hook, 2 component (RTL), 1 server action, 1 E2E smoke
@@ -22,23 +23,29 @@
 ## Context
 
 ### Original Request
+
 > "Plan to add tests and add them in workflow as well."
 
 ### Interview Summary
+
 **Key Decisions**:
+
 - **Test runner**: Vitest + React Testing Library (Next 16 / React 19 / ESM-native fit)
 - **Test scope**: Unit (lib + hooks), Component (RTL), Server actions, E2E (Playwright) — all four layers
 - **CI integration**: New `typecheck` + `test` + `e2e` jobs in existing `push.yml`; `release` and `docker-force-push` gated on them; add `pull_request` trigger so PRs run CI
 - **Coverage**: Report-only artifact, no failing threshold (establish baseline first)
 
 **Project Profile** (from research):
+
 - Next.js 16, React 19.2, TypeScript 5.8, pnpm@10.32.1
 - ESM-only (`"type": "module"`), `moduleResolution: "Bundler"`, `verbatimModuleSyntax: true`, `paths: { "@/*": ["./src/*"] }`
 - Existing CI: format-check → release (semantic-release) → docker-push, only on push:main + workflow_dispatch
 - Testable surfaces: `src/lib/{registry,session,urls,utils}.ts`, `src/hooks/use-async-data.ts`, `src/app/actions.ts`, `src/components/**`
 
 ### Metis Review
+
 **Critical gaps surfaced** (addressed in plan):
+
 - `src/env.js` validates env at module load → tests importing `@/env` (transitively, via `registry.ts`) will throw without `SKIP_ENV_VALIDATION` or fixture env
 - `src/lib/registry.ts` reads `env.REGISTRY_URL` at module initialization (top-level side effect) → tests must inject env before import
 - `src/lib/session.ts` and `src/app/actions.ts` use `"use server"` + `cookies()` from `next/headers` → cannot run in plain Vitest without mocking `next/headers`
@@ -53,9 +60,11 @@
 ## Work Objectives
 
 ### Core Objective
+
 Add a working multi-layer test infrastructure (Vitest + RTL + Playwright), seed it with one runnable example per layer, and wire it into the existing GitHub Actions workflow so all PRs and pushes run typecheck + tests + E2E before release/docker steps.
 
 ### Concrete Deliverables
+
 - `vitest.config.ts` — workspaces or single config supporting jsdom for components, node for server/lib
 - `vitest.setup.ts` — `@testing-library/jest-dom` matchers, env defaults, global mocks for `next/navigation`, `next/image`, `next-themes`
 - `playwright.config.ts` — runs against `pnpm start` after `pnpm build`, single chromium project for CI, html reporter
@@ -79,6 +88,7 @@ Add a working multi-layer test infrastructure (Vitest + RTL + Playwright), seed 
 - README — new "Testing" section with how to run each layer
 
 ### Definition of Done
+
 - [ ] `pnpm test` — exits 0, runs ≥7 tests across lib/hooks/components/server-actions
 - [ ] `pnpm test:coverage` — exits 0, produces `coverage/index.html`
 - [ ] `pnpm test:e2e` — exits 0 after `pnpm build && pnpm start`
@@ -89,6 +99,7 @@ Add a working multi-layer test infrastructure (Vitest + RTL + Playwright), seed 
 - [ ] README has "Testing" section explaining each command
 
 ### Must Have
+
 - Vitest config that handles ESM + `verbatimModuleSyntax` + `@/*` alias without errors
 - Tests pass in CI on Node 22 with `pnpm install --frozen-lockfile`
 - `release` job in `push.yml` blocked when tests fail
@@ -97,6 +108,7 @@ Add a working multi-layer test infrastructure (Vitest + RTL + Playwright), seed 
 - `SKIP_ENV_VALIDATION=true` (or fixture env) injected before any test imports `@/env`
 
 ### Must NOT Have (Guardrails)
+
 - ❌ Coverage thresholds (`thresholds.lines/functions/...`) — report-only per user decision
 - ❌ Visual regression / Storybook / Chromatic / mutation testing
 - ❌ Removing or modifying the existing `format-check` job, `release` job logic, semantic-release config, or `docker-force-push` step internals (only their `needs:` arrays change)
@@ -117,13 +129,16 @@ Add a working multi-layer test infrastructure (Vitest + RTL + Playwright), seed 
 > **ZERO HUMAN INTERVENTION** — all verification is agent-executed via Bash/Playwright/tmux.
 
 ### Test Decision
+
 - **Infrastructure exists**: NO (we're creating it — this plan IS the infrastructure)
 - **Automated tests**: YES — the deliverable is the test suite itself
 - **Framework**: Vitest 2.x + React Testing Library 16.x + Playwright 1.x
 - **TDD application**: For each sample test, write the test first against the existing source file, run RED (fail because test infra not yet wired), GREEN (config wired correctly so test passes), no REFACTOR needed for samples
 
 ### QA Policy
+
 Every task includes agent-executed QA scenarios. Evidence saved to `.sisyphus/evidence/task-{N}-{slug}.{ext}`.
+
 - **Config tasks (T1-T6)**: Bash — run `pnpm install`, `pnpm test --run --reporter=verbose`, capture stdout
 - **Test sample tasks (T7-T13)**: Bash — run targeted `pnpm vitest run <file>`, assert exit 0 + N tests passed
 - **E2E task (T14)**: Bash — `pnpm build && pnpm test:e2e --reporter=list`, capture report
@@ -338,10 +353,11 @@ Max Concurrent: 7 (Wave 2)
 
   **What to do**:
   - Create `vitest.config.ts` at repo root:
+
     ```ts
-    import { defineConfig } from "vitest/config";
-    import react from "@vitejs/plugin-react";
-    import tsconfigPaths from "vite-tsconfig-paths";
+    import react from "@vitejs/plugin-react"
+    import tsconfigPaths from "vite-tsconfig-paths"
+    import { defineConfig } from "vitest/config"
 
     export default defineConfig({
       plugins: [react(), tsconfigPaths()],
@@ -365,8 +381,9 @@ Max Concurrent: 7 (Wave 2)
           ],
         },
       },
-    });
+    })
     ```
+
   - Note: `globals: true` removes need to import `describe/it/expect`; if user prefers explicit imports, leave as `false` — default to `true` for ergonomics
 
   **Must NOT do**:
@@ -429,16 +446,18 @@ Max Concurrent: 7 (Wave 2)
 
   **What to do**:
   - Create `vitest.setup.ts` at repo root:
+
     ```ts
-    import "@testing-library/jest-dom/vitest";
-    import { afterEach, vi } from "vitest";
-    import { cleanup } from "@testing-library/react";
+    import "@testing-library/jest-dom/vitest"
+
+    import { cleanup } from "@testing-library/react"
+    import { afterEach, vi } from "vitest"
 
     // Ensure env validation never throws during unit tests
-    process.env.SKIP_ENV_VALIDATION = "true";
-    process.env.REGISTRY_URL ??= "https://registry.test.local";
+    process.env.SKIP_ENV_VALIDATION = "true"
+    process.env.REGISTRY_URL ??= "https://registry.test.local"
 
-    afterEach(() => cleanup());
+    afterEach(() => cleanup())
 
     // Mock next/navigation router APIs used by client components
     vi.mock("next/navigation", () => ({
@@ -453,22 +472,27 @@ Max Concurrent: 7 (Wave 2)
       useSearchParams: () => new URLSearchParams(),
       redirect: vi.fn(),
       notFound: vi.fn(),
-    }));
+    }))
 
     // Mock next/image to render a plain img tag
     vi.mock("next/image", () => ({
       default: (props: Record<string, unknown>) => {
-        const React = require("react");
-        return React.createElement("img", props);
+        const React = require("react")
+        return React.createElement("img", props)
       },
-    }));
+    }))
 
     // Mock next-themes to avoid window matchMedia issues
     vi.mock("next-themes", () => ({
       ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
-      useTheme: () => ({ theme: "light", setTheme: vi.fn(), resolvedTheme: "light" }),
-    }));
+      useTheme: () => ({
+        theme: "light",
+        setTheme: vi.fn(),
+        resolvedTheme: "light",
+      }),
+    }))
     ```
+
   - Note: Use ESM-friendly `vi.mock` factories. Avoid `require()` where possible — use dynamic `import()` if linter complains.
 
   **Must NOT do**:
@@ -501,7 +525,7 @@ Max Concurrent: 7 (Wave 2)
 
   **QA Scenarios**:
 
-  ```
+  ````
   Scenario: Setup file syntactically valid + env default applied
     Tool: Bash
     Preconditions: T1 + T3 done
@@ -520,7 +544,7 @@ Max Concurrent: 7 (Wave 2)
       5. Delete temp file
     Expected Result: Test passes, proving setup file loads
     Evidence: .sisyphus/evidence/task-4-setup.txt
-  ```
+  ````
 
   **Commit**: YES
   - Message: `chore(test): add vitest setup with global mocks`
@@ -531,11 +555,12 @@ Max Concurrent: 7 (Wave 2)
 
   **What to do**:
   - Create `playwright.config.ts` at repo root:
-    ```ts
-    import { defineConfig, devices } from "@playwright/test";
 
-    const PORT = Number(process.env.PORT ?? 3000);
-    const baseURL = `http://localhost:${PORT}`;
+    ```ts
+    import { defineConfig, devices } from "@playwright/test"
+
+    const PORT = Number(process.env.PORT ?? 3000)
+    const baseURL = `http://localhost:${PORT}`
 
     export default defineConfig({
       testDir: "./e2e",
@@ -543,27 +568,29 @@ Max Concurrent: 7 (Wave 2)
       forbidOnly: !!process.env.CI,
       retries: process.env.CI ? 2 : 0,
       workers: process.env.CI ? 1 : undefined,
-      reporter: process.env.CI ? [["html", { open: "never" }], ["github"]] : "list",
+      reporter: process.env.CI
+        ? [["html", { open: "never" }], ["github"]]
+        : "list",
       use: {
         baseURL,
         trace: "on-first-retry",
         screenshot: "only-on-failure",
       },
-      projects: [
-        { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-      ],
+      projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
       webServer: {
         command: "pnpm start",
         url: baseURL,
         timeout: 120_000,
         reuseExistingServer: !process.env.CI,
         env: {
-          REGISTRY_URL: process.env.REGISTRY_URL ?? "https://registry.test.local",
+          REGISTRY_URL:
+            process.env.REGISTRY_URL ?? "https://registry.test.local",
           SKIP_ENV_VALIDATION: "true",
         },
       },
-    });
+    })
     ```
+
   - Create `e2e/.gitkeep` to establish directory (real spec lands in T14)
 
   **Must NOT do**:
@@ -670,22 +697,25 @@ Max Concurrent: 7 (Wave 2)
   **What to do**:
   - Read `src/lib/utils.ts` first to understand exported functions (likely `cn()` from `clsx` + `tailwind-merge`)
   - Create `src/lib/utils.test.ts`:
+
     ```ts
-    import { describe, expect, it } from "vitest";
-    import { cn } from "./utils";
+    import { describe, expect, it } from "vitest"
+
+    import { cn } from "./utils"
 
     describe("cn", () => {
       it("merges class names", () => {
-        expect(cn("a", "b")).toBe("a b");
-      });
+        expect(cn("a", "b")).toBe("a b")
+      })
       it("dedupes conflicting tailwind classes (tailwind-merge wins)", () => {
-        expect(cn("p-2", "p-4")).toBe("p-4");
-      });
+        expect(cn("p-2", "p-4")).toBe("p-4")
+      })
       it("handles falsy values", () => {
-        expect(cn("a", false && "b", null, undefined, "c")).toBe("a c");
-      });
-    });
+        expect(cn("a", false && "b", null, undefined, "c")).toBe("a c")
+      })
+    })
     ```
+
   - Adjust assertions if `utils.ts` exports more (e.g., add a `describe` per export)
 
   **Must NOT do**:
@@ -981,8 +1011,10 @@ Max Concurrent: 7 (Wave 2)
   - Create `src/app/actions.test.ts`:
     - Per-test mock of `next/headers`:
       ```ts
-      const cookieStore = { get: vi.fn(), set: vi.fn(), delete: vi.fn() };
-      vi.mock("next/headers", () => ({ cookies: () => Promise.resolve(cookieStore) }));
+      const cookieStore = { get: vi.fn(), set: vi.fn(), delete: vi.fn() }
+      vi.mock("next/headers", () => ({
+        cookies: () => Promise.resolve(cookieStore),
+      }))
       ```
       (Note: in Next 15+, `cookies()` returns a Promise — verify the version's API and align)
     - Test login: providing valid creds calls `cookieStore.set` with session value; invalid creds throws / returns error
@@ -1036,33 +1068,39 @@ Max Concurrent: 7 (Wave 2)
 
   **What to do**:
   - Create `e2e/smoke.spec.ts`:
+
     ```ts
-    import { test, expect } from "@playwright/test";
+    import { expect, test } from "@playwright/test"
 
     test.describe("smoke", () => {
       test("home page loads", async ({ page }) => {
-        await page.goto("/");
-        await expect(page).toHaveTitle(/.+/);
+        await page.goto("/")
+        await expect(page).toHaveTitle(/.+/)
         // Basic content check — header should render
-        await expect(page.locator("header")).toBeVisible({ timeout: 10_000 });
-      });
+        await expect(page.locator("header")).toBeVisible({ timeout: 10_000 })
+      })
 
-      test("login form is reachable and rejects empty submit", async ({ page }) => {
-        await page.goto("/");
+      test("login form is reachable and rejects empty submit", async ({
+        page,
+      }) => {
+        await page.goto("/")
         // If login form is on home page (registry not authed), interact there.
         // Otherwise navigate to wherever it appears. Adjust selector after reading login-form.tsx.
-        const submitButton = page.getByRole("button", { name: /sign in|log in|login/i });
+        const submitButton = page.getByRole("button", {
+          name: /sign in|log in|login/i,
+        })
         if (await submitButton.count()) {
-          await submitButton.click();
+          await submitButton.click()
           // Expect either an HTML5 validation message (browser native) or a visible error
           // Don't assert specific text — just that we didn't crash
-          await expect(page).not.toHaveURL(/error/);
+          await expect(page).not.toHaveURL(/error/)
         } else {
-          test.skip(true, "No login form on home — covered elsewhere");
+          test.skip(true, "No login form on home — covered elsewhere")
         }
-      });
-    });
+      })
+    })
     ```
+
   - Adjust selectors after reading `src/components/login-form.tsx` and route layout
   - Delete `e2e/.gitkeep` once spec exists (optional, but cleaner)
 
@@ -1173,6 +1211,7 @@ Max Concurrent: 7 (Wave 2)
 
   **What to do**:
   - Append two new jobs after `format-check`:
+
     ```yaml
     typecheck:
       name: TypeScript Typecheck
@@ -1209,6 +1248,7 @@ Max Concurrent: 7 (Wave 2)
             path: coverage/
             retention-days: 7
     ```
+
   - Reuse existing pnpm + node setup pattern from `format-check` for consistency
 
   **Must NOT do**:
@@ -1410,6 +1450,7 @@ Max Concurrent: 7 (Wave 2)
   **What to do**:
   - Read existing `README.md`
   - Append a `## Testing` section after existing content:
+
     ```markdown
     ## Testing
 
@@ -1417,13 +1458,13 @@ Max Concurrent: 7 (Wave 2)
 
     ### Commands
 
-    | Command | Purpose |
-    | --- | --- |
-    | `pnpm test` | Run unit + component tests once |
-    | `pnpm test:watch` | Run Vitest in watch mode |
-    | `pnpm test:coverage` | Run tests with V8 coverage; outputs `coverage/` |
-    | `pnpm test:e2e` | Run Playwright E2E (builds the app and starts it) |
-    | `pnpm test:e2e:ui` | Run Playwright in UI mode for debugging |
+    | Command              | Purpose                                           |
+    | -------------------- | ------------------------------------------------- |
+    | `pnpm test`          | Run unit + component tests once                   |
+    | `pnpm test:watch`    | Run Vitest in watch mode                          |
+    | `pnpm test:coverage` | Run tests with V8 coverage; outputs `coverage/`   |
+    | `pnpm test:e2e`      | Run Playwright E2E (builds the app and starts it) |
+    | `pnpm test:e2e:ui`   | Run Playwright in UI mode for debugging           |
 
     ### Layout
 
@@ -1436,6 +1477,7 @@ Max Concurrent: 7 (Wave 2)
     Coverage and Playwright reports are uploaded as workflow artifacts (7-day retention).
     Releases and Docker pushes only run after all four checks pass.
     ```
+
   - Do NOT remove or rewrite existing README content
 
   **Must NOT do**:
@@ -1482,20 +1524,20 @@ Max Concurrent: 7 (Wave 2)
 > **Do NOT auto-proceed after verification. Wait for user's explicit approval.**
 
 - [ ] F1. **Plan Compliance Audit** — `oracle`
-  Read this plan end-to-end. For each "Must Have": verify it exists (read file, run command). For each "Must NOT Have": grep codebase for forbidden patterns — reject with file:line if found (especially: coverage thresholds in vitest.config.ts, removed `format-check` job, modified semantic-release config, `as any` in test files, Next/React/TS version bumps, renamed `push.yml`). Verify evidence files exist in `.sisyphus/evidence/`. Compare deliverables against plan.
-  Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
+      Read this plan end-to-end. For each "Must Have": verify it exists (read file, run command). For each "Must NOT Have": grep codebase for forbidden patterns — reject with file:line if found (especially: coverage thresholds in vitest.config.ts, removed `format-check` job, modified semantic-release config, `as any` in test files, Next/React/TS version bumps, renamed `push.yml`). Verify evidence files exist in `.sisyphus/evidence/`. Compare deliverables against plan.
+      Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
 
 - [ ] F2. **Code Quality Review** — `unspecified-high`
-  Run `pnpm typecheck`, `pnpm format:check`, `pnpm test --run`, `pnpm test:e2e`. Review all new files for: `as any`/`@ts-ignore`, empty catches, console.log, commented-out code, unused imports, generic names (`data/result/item/temp/helper`), excessive comments, premature abstraction. Verify YAML syntax via `actionlint .github/workflows/push.yml` (install if missing).
-  Output: `Typecheck [PASS/FAIL] | Format [PASS/FAIL] | Tests [N/N] | E2E [N/N] | actionlint [PASS/FAIL] | Files [N clean/N issues] | VERDICT`
+      Run `pnpm typecheck`, `pnpm format:check`, `pnpm test --run`, `pnpm test:e2e`. Review all new files for: `as any`/`@ts-ignore`, empty catches, console.log, commented-out code, unused imports, generic names (`data/result/item/temp/helper`), excessive comments, premature abstraction. Verify YAML syntax via `actionlint .github/workflows/push.yml` (install if missing).
+      Output: `Typecheck [PASS/FAIL] | Format [PASS/FAIL] | Tests [N/N] | E2E [N/N] | actionlint [PASS/FAIL] | Files [N clean/N issues] | VERDICT`
 
 - [ ] F3. **Real Manual QA** — `unspecified-high`
-  From clean state: `rm -rf node_modules .next && pnpm install --frozen-lockfile`. Execute every QA scenario from every task in order. Cross-task integration: confirm `pnpm test --coverage` produces `coverage/`, `pnpm test:e2e` produces `playwright-report/`, both gitignored. Edge cases: run `pnpm test` with `REGISTRY_URL` unset (must still pass via `SKIP_ENV_VALIDATION` or fixture). Save evidence to `.sisyphus/evidence/final-qa/`.
-  Output: `Scenarios [N/N pass] | Integration [N/N] | Edge Cases [N tested] | VERDICT`
+      From clean state: `rm -rf node_modules .next && pnpm install --frozen-lockfile`. Execute every QA scenario from every task in order. Cross-task integration: confirm `pnpm test --coverage` produces `coverage/`, `pnpm test:e2e` produces `playwright-report/`, both gitignored. Edge cases: run `pnpm test` with `REGISTRY_URL` unset (must still pass via `SKIP_ENV_VALIDATION` or fixture). Save evidence to `.sisyphus/evidence/final-qa/`.
+      Output: `Scenarios [N/N pass] | Integration [N/N] | Edge Cases [N tested] | VERDICT`
 
 - [ ] F4. **Scope Fidelity Check** — `deep`
-  For each task: read "What to do", read actual git diff. Verify 1:1 — every spec item built, nothing beyond spec built. Check "Must NOT do" compliance — flag any source file under `src/**/*.{ts,tsx}` (non-test) modified, any `package.json` `dependencies` changed (only `devDependencies` should grow, plus `scripts`), any change to existing CI jobs `format-check` / `release` body / `docker-force-push` body beyond their `needs:` array. Detect cross-task contamination.
-  Output: `Tasks [N/N compliant] | Source Untouched [Y/N] | Existing Jobs Intact [Y/N] | Contamination [CLEAN/N issues] | VERDICT`
+      For each task: read "What to do", read actual git diff. Verify 1:1 — every spec item built, nothing beyond spec built. Check "Must NOT do" compliance — flag any source file under `src/**/*.{ts,tsx}` (non-test) modified, any `package.json` `dependencies` changed (only `devDependencies` should grow, plus `scripts`), any change to existing CI jobs `format-check` / `release` body / `docker-force-push` body beyond their `needs:` array. Detect cross-task contamination.
+      Output: `Tasks [N/N compliant] | Source Untouched [Y/N] | Existing Jobs Intact [Y/N] | Contamination [CLEAN/N issues] | VERDICT`
 
 ---
 
@@ -1530,6 +1572,7 @@ Pre-commit gate per task: `pnpm typecheck && pnpm test --run` (E2E only on T14, 
 ## Success Criteria
 
 ### Verification Commands
+
 ```bash
 # Install clean
 rm -rf node_modules && pnpm install --frozen-lockfile         # Expected: success
@@ -1555,6 +1598,7 @@ git diff main -- 'src/**/*.ts' 'src/**/*.tsx' ':!src/**/*.test.*'  # Expected: e
 ```
 
 ### Final Checklist
+
 - [ ] All "Must Have" present
 - [ ] All "Must NOT Have" absent
 - [ ] `pnpm test` runs ≥7 tests, all pass

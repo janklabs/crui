@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+
 import { imageUrl, namespaceUrl, parsePath, parsePathname } from "./urls"
 
 describe("imageUrl", () => {
@@ -23,7 +24,9 @@ describe("imageUrl", () => {
   })
 
   it("handles namespaced repo with tag", () => {
-    expect(imageUrl("library/nginx", "1.21")).toBe("/images/library/nginx/tags/1.21")
+    expect(imageUrl("library/nginx", "1.21")).toBe(
+      "/images/library/nginx/tags/1.21",
+    )
   })
 
   it("handles empty string repo", () => {
@@ -47,11 +50,18 @@ describe("namespaceUrl", () => {
 
 describe("parsePath", () => {
   it("single segment → namespace", () => {
-    expect(parsePath(["library"])).toEqual({ type: "namespace", namespace: "library" })
+    expect(parsePath(["library"])).toEqual({
+      type: "namespace",
+      namespace: "library",
+    })
   })
 
   it("_/repo → no-namespace image without tag", () => {
-    expect(parsePath(["_", "nginx"])).toEqual({ type: "image", repo: "nginx", tag: null })
+    expect(parsePath(["_", "nginx"])).toEqual({
+      type: "image",
+      repo: "nginx",
+      tag: null,
+    })
   })
 
   it("_/repo/tags/latest → image with tag", () => {
@@ -109,11 +119,17 @@ describe("parsePathname", () => {
   })
 
   it("parses no-namespace image path", () => {
-    expect(parsePathname("/images/_/nginx")).toEqual({ repo: "nginx", tag: null })
+    expect(parsePathname("/images/_/nginx")).toEqual({
+      repo: "nginx",
+      tag: null,
+    })
   })
 
   it("parses namespaced image path", () => {
-    expect(parsePathname("/images/library/nginx")).toEqual({ repo: "library/nginx", tag: null })
+    expect(parsePathname("/images/library/nginx")).toEqual({
+      repo: "library/nginx",
+      tag: null,
+    })
   })
 
   it("parses tag from no-namespace path", () => {

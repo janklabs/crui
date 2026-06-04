@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { checkRegistryStatus } from "@/lib/registry"
+import { clearSession, getSession, setSession } from "@/lib/session"
+import { getRegistryStatusAction, loginAction, logoutAction } from "./actions"
+
 vi.mock("@/lib/registry", () => ({
   checkRegistryStatus: vi.fn(),
   listRepositories: vi.fn(),
@@ -12,14 +16,6 @@ vi.mock("@/lib/session", () => ({
   setSession: vi.fn(),
   clearSession: vi.fn(),
 }))
-
-import { checkRegistryStatus } from "@/lib/registry"
-import { clearSession, getSession, setSession } from "@/lib/session"
-import {
-  getRegistryStatusAction,
-  loginAction,
-  logoutAction,
-} from "./actions"
 
 const mockCheckRegistryStatus = vi.mocked(checkRegistryStatus)
 const mockGetSession = vi.mocked(getSession)

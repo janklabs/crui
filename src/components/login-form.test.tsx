@@ -2,6 +2,9 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
+import { loginAction } from "@/app/actions"
+import { LoginForm } from "./login-form"
+
 vi.mock("@/app/actions", () => ({
   loginAction: vi.fn(),
   logoutAction: vi.fn(),
@@ -10,9 +13,6 @@ vi.mock("@/app/actions", () => ({
   fetchTagsAction: vi.fn(),
   fetchManifestAction: vi.fn(),
 }))
-
-import { loginAction } from "@/app/actions"
-import { LoginForm } from "./login-form"
 
 const mockLoginAction = vi.mocked(loginAction)
 
@@ -41,7 +41,10 @@ describe("LoginForm", () => {
 
   it("shows error message when login fails", async () => {
     const user = userEvent.setup()
-    mockLoginAction.mockResolvedValue({ success: false, error: "Invalid credentials" })
+    mockLoginAction.mockResolvedValue({
+      success: false,
+      error: "Invalid credentials",
+    })
 
     render(<LoginForm registryUrl="https://registry.example.com" />)
 

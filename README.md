@@ -59,13 +59,13 @@ This project uses **Vitest** for unit / component / server-action tests and **Pl
 
 ### Commands
 
-| Command | Purpose |
-| --- | --- |
-| `pnpm test` | Run unit + component tests once |
-| `pnpm test:watch` | Run Vitest in watch mode |
-| `pnpm test:coverage` | Run tests with V8 coverage; outputs `coverage/` |
-| `pnpm test:e2e` | Run Playwright E2E (requires `pnpm build` first) |
-| `pnpm test:e2e:ui` | Run Playwright in UI mode for debugging |
+| Command              | Purpose                                          |
+| -------------------- | ------------------------------------------------ |
+| `pnpm test`          | Run unit + component tests once                  |
+| `pnpm test:watch`    | Run Vitest in watch mode                         |
+| `pnpm test:coverage` | Run tests with V8 coverage; outputs `coverage/`  |
+| `pnpm test:e2e`      | Run Playwright E2E (requires `pnpm build` first) |
+| `pnpm test:e2e:ui`   | Run Playwright in UI mode for debugging          |
 
 ### Layout
 
