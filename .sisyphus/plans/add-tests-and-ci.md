@@ -1523,19 +1523,19 @@ Max Concurrent: 7 (Wave 2)
 > 4 review agents run in PARALLEL. ALL must APPROVE. Present consolidated results to user and get explicit "okay" before completing.
 > **Do NOT auto-proceed after verification. Wait for user's explicit approval.**
 
-- [ ] F1. **Plan Compliance Audit** — `oracle`
+- [x] F1. **Plan Compliance Audit** — `oracle`
       Read this plan end-to-end. For each "Must Have": verify it exists (read file, run command). For each "Must NOT Have": grep codebase for forbidden patterns — reject with file:line if found (especially: coverage thresholds in vitest.config.ts, removed `format-check` job, modified semantic-release config, `as any` in test files, Next/React/TS version bumps, renamed `push.yml`). Verify evidence files exist in `.sisyphus/evidence/`. Compare deliverables against plan.
       Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
 
-- [ ] F2. **Code Quality Review** — `unspecified-high`
+- [x] F2. **Code Quality Review** — `unspecified-high`
       Run `pnpm typecheck`, `pnpm format:check`, `pnpm test --run`, `pnpm test:e2e`. Review all new files for: `as any`/`@ts-ignore`, empty catches, console.log, commented-out code, unused imports, generic names (`data/result/item/temp/helper`), excessive comments, premature abstraction. Verify YAML syntax via `actionlint .github/workflows/push.yml` (install if missing).
       Output: `Typecheck [PASS/FAIL] | Format [PASS/FAIL] | Tests [N/N] | E2E [N/N] | actionlint [PASS/FAIL] | Files [N clean/N issues] | VERDICT`
 
-- [ ] F3. **Real Manual QA** — `unspecified-high`
+- [x] F3. **Real Manual QA** — `unspecified-high`
       From clean state: `rm -rf node_modules .next && pnpm install --frozen-lockfile`. Execute every QA scenario from every task in order. Cross-task integration: confirm `pnpm test --coverage` produces `coverage/`, `pnpm test:e2e` produces `playwright-report/`, both gitignored. Edge cases: run `pnpm test` with `REGISTRY_URL` unset (must still pass via `SKIP_ENV_VALIDATION` or fixture). Save evidence to `.sisyphus/evidence/final-qa/`.
       Output: `Scenarios [N/N pass] | Integration [N/N] | Edge Cases [N tested] | VERDICT`
 
-- [ ] F4. **Scope Fidelity Check** — `deep`
+- [x] F4. **Scope Fidelity Check** — `deep`
       For each task: read "What to do", read actual git diff. Verify 1:1 — every spec item built, nothing beyond spec built. Check "Must NOT do" compliance — flag any source file under `src/**/*.{ts,tsx}` (non-test) modified, any `package.json` `dependencies` changed (only `devDependencies` should grow, plus `scripts`), any change to existing CI jobs `format-check` / `release` body / `docker-force-push` body beyond their `needs:` array. Detect cross-task contamination.
       Output: `Tasks [N/N compliant] | Source Untouched [Y/N] | Existing Jobs Intact [Y/N] | Contamination [CLEAN/N issues] | VERDICT`
 
