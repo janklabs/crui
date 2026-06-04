@@ -52,3 +52,28 @@ docker compose up -d
 | `REGISTRY_USERNAME`    | No       | Default username for registry auth. If not set, users are prompted to log in.                                                        |
 | `REGISTRY_PASSWORD`    | No       | Default password for registry auth.                                                                                                  |
 | `DISPLAY_REGISTRY_URL` | No       | Override the registry URL shown in the UI. Useful when the server-side URL differs from what users access (e.g., Docker networking). |
+
+## Testing
+
+This project uses **Vitest** for unit / component / server-action tests and **Playwright** for end-to-end tests.
+
+### Commands
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm test` | Run unit + component tests once |
+| `pnpm test:watch` | Run Vitest in watch mode |
+| `pnpm test:coverage` | Run tests with V8 coverage; outputs `coverage/` |
+| `pnpm test:e2e` | Run Playwright E2E (requires `pnpm build` first) |
+| `pnpm test:e2e:ui` | Run Playwright in UI mode for debugging |
+
+### Layout
+
+- `src/**/*.test.{ts,tsx}` — Vitest unit + component tests, colocated with source
+- `e2e/*.spec.ts` — Playwright end-to-end specs
+
+### CI
+
+On every pull request and push to `main`, GitHub Actions runs `format-check`, `typecheck`, `test`, and `e2e` jobs.
+Coverage and Playwright reports are uploaded as workflow artifacts (7-day retention).
+Releases and Docker pushes only run after all four checks pass.
